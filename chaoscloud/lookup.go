@@ -1,6 +1,7 @@
 package chaoscloud
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -46,4 +47,24 @@ func ResourcesParallel(query string) ([]Result, error) {
 	go func() { c <- Quota(query) }()
 	go func() { c <- Blob(query) }()
 	return []Result{<-c, <-c, <-c}, nil
+}
+
+func ResourcesTimeout(query string, timeout time.Duration) ([]Result, error) {
+	t := time.After(timeout)
+	c := make(chan Result, 3)
+	go func() { c <- Machine(query) }()
+	go func() { c <- Quota(query) }()
+	go func() { c <- Blob(query) }()
+
+	var results []Result
+	for i := 0; i < 3; i++ {
+		select {
+		case <-t:
+			return results, errors.New("timed out")
+		case result := <-c:
+			results = append(results, result)
+		}
+	}
+
+	return results, nil
 }
