@@ -37,3 +37,11 @@ func Resources(query string) ([]Result, error) {
 	}
 	return results, nil
 }
+
+func ResourcesParallel(query string) ([]Result, error) {
+	c := make(chan Result)
+	go func() { c <- Machine(query) }()
+	go func() { c <- Quota(query) }()
+	go func() { c <- Blob(query) }()
+	return []Result{<-c, <-c, <-c}, nil
+}
