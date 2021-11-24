@@ -11,6 +11,8 @@ type Result struct {
 	Value string
 }
 
+func (r Result) String() string { return r.Name + "\n" }
+
 var (
 	Machine = FakeLookup("machine", "vm-vraycloud-1b-pool-4", "120.157.185.89")
 	Quota   = FakeLookup("quota", "artist-senior-limit", "50000.00")
