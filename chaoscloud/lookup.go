@@ -68,3 +68,14 @@ func ResourcesTimeout(query string, timeout time.Duration) ([]Result, error) {
 
 	return results, nil
 }
+
+func First(replicas ...LookupFunc) LookupFunc {
+	return func(query string) Result {
+		c := make(chan Result, len(replicas))
+		for i := range replicas {
+			go func(i int) { c <- replicas[i](query) }(i)
+		}
+
+		return <-c
+	}
+}
