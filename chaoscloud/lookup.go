@@ -18,6 +18,19 @@ var (
 	Machine = FakeLookup("machine", "vm-vraycloud-1b-pool-4", "120.157.185.89")
 	Quota   = FakeLookup("quota", "artist-senior-limit", "50000.00")
 	Blob    = FakeLookup("scene", "gopher_final.vrscene", "gs://vraycloud-production/10c278e2a799ca4d8c0fb89")
+
+	ReplicatedMachine = First(
+		FakeLookup("machine_1", "vm-vraycloud-1b-pool-4", "120.157.185.89"),
+		FakeLookup("machine_2", "vm-vraycloud-1b-pool-4", "120.157.185.89"),
+	)
+	ReplicatedQuota = First(
+		FakeLookup("quota_1", "artist-senior-limit", "50000.00"),
+		FakeLookup("quota_2", "artist-senior-limit", "50000.00"),
+	)
+	ReplicatedBlob = First(
+		FakeLookup("scene_1", "gopher_final.vrscene", "gs://vraycloud-production/10c278e2a799ca4d8c0fb89"),
+		FakeLookup("scene_2", "gopher_final.vrscene", "gs://vraycloud-production/10c278e2a799ca4d8c0fb89"),
+	)
 )
 
 type LookupFunc func(query string) Result
@@ -55,6 +68,26 @@ func ResourcesTimeout(query string, timeout time.Duration) ([]Result, error) {
 	go func() { c <- Machine(query) }()
 	go func() { c <- Quota(query) }()
 	go func() { c <- Blob(query) }()
+
+	var results []Result
+	for i := 0; i < 3; i++ {
+		select {
+		case <-t:
+			return results, errors.New("timed out")
+		case result := <-c:
+			results = append(results, result)
+		}
+	}
+
+	return results, nil
+}
+
+func ResourcesReplicated(query string, timeout time.Duration) ([]Result, error) {
+	t := time.After(timeout)
+	c := make(chan Result, 3)
+	go func() { c <- ReplicatedMachine(query) }()
+	go func() { c <- ReplicatedQuota(query) }()
+	go func() { c <- ReplicatedBlob(query) }()
 
 	var results []Result
 	for i := 0; i < 3; i++ {
