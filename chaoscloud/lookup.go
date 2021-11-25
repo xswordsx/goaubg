@@ -1,3 +1,9 @@
+// Package chaoscloud is a collection of dummy functions that illustrate how Go
+// programs can create fast, fault-tolerant, concurrent methods that can be used
+// as plain synchronous code.
+//
+// These implementations are heavily-based on a talk given by the Go team's
+// current lead - Sameer Ajmani - "Program your next server in Go".
 package chaoscloud
 
 import (
