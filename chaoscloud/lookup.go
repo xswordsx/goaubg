@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Result is a simple <Name, Value> tuple.
 type Result struct {
 	Name  string
 	Value string
@@ -33,8 +34,12 @@ var (
 	)
 )
 
+// LookupFunc is a convinent shorthand for a function that
+// returns a result based on a query.
 type LookupFunc func(query string) Result
 
+// FakeLookup returns a result for resource of type kind
+// after no longer than 100 milliseconds.
 func FakeLookup(kind, name, value string) LookupFunc {
 	return func(q string) Result {
 		time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
@@ -45,6 +50,7 @@ func FakeLookup(kind, name, value string) LookupFunc {
 	}
 }
 
+// Resources looks up various required resources to start a V-Ray render.
 func Resources(query string) ([]Result, error) {
 	results := []Result{
 		Machine(query),
@@ -54,6 +60,8 @@ func Resources(query string) ([]Result, error) {
 	return results, nil
 }
 
+// ResourcesParallel looks up various required resources to
+// start a V-Ray render in parallel.
 func ResourcesParallel(query string) ([]Result, error) {
 	c := make(chan Result)
 	go func() { c <- Machine(query) }()
@@ -62,6 +70,9 @@ func ResourcesParallel(query string) ([]Result, error) {
 	return []Result{<-c, <-c, <-c}, nil
 }
 
+// ResourcesTimeout looks up various required resources to
+// start a V-Ray render in parallel but waits no longer than
+// timeout.
 func ResourcesTimeout(query string, timeout time.Duration) ([]Result, error) {
 	t := time.After(timeout)
 	c := make(chan Result, 3)
@@ -82,6 +93,10 @@ func ResourcesTimeout(query string, timeout time.Duration) ([]Result, error) {
 	return results, nil
 }
 
+// ResourcesReplicated looks up various required resources
+// to start a V-Ray render by querying multiple redundant
+// backends for the information. The method waits for a
+// response no longer than timeout.
 func ResourcesReplicated(query string, timeout time.Duration) ([]Result, error) {
 	t := time.After(timeout)
 	c := make(chan Result, 3)
@@ -102,6 +117,8 @@ func ResourcesReplicated(query string, timeout time.Duration) ([]Result, error) 
 	return results, nil
 }
 
+// First returns the result from the fastest replica from
+// a given replica list.
 func First(replicas ...LookupFunc) LookupFunc {
 	return func(query string) Result {
 		c := make(chan Result, len(replicas))
