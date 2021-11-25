@@ -1,7 +1,10 @@
 # AUBG - Intro to Go!
 
-Code samples for the "Introduction to Go" lecture at AUBG IT Week 2021
+Code samples for the **Introduction to Go** lecture at AUBG IT Week 2021
 
-## Reading through the source
+## Running the examples
 
-The code is versioned per code snippet.
+All examples can be run from the root of the repository:
+
+
+    $ go run ./path/to/file
